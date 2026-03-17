@@ -120,6 +120,7 @@ jobs:
 
           mvn -B -ntp -DskipTests \
             -pl "${SERVICE}" -am \
+            compile \
             jib:build \
             -Djib.to.image="${IMAGE}" \
             -Djib.to.tags="${{ steps.tags.outputs.tags }}"
