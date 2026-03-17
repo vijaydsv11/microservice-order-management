@@ -6,7 +6,7 @@
 
     <groupId>com.microservices</groupId>
     <artifactId>order-management-microservices</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <name>Order Management Microservices</name>
