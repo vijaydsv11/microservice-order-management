@@ -134,7 +134,8 @@ jobs:
       REGISTRY: ${{ github.event.inputs.registry || vars.CONTAINER_REGISTRY || 'ghcr.io' }}
       OWNER: ${{ github.event.inputs.image_namespace || vars.IMAGE_NAMESPACE || github.repository_owner }}
     steps:
-      - name: Validate deploy secrets
+      - name: Check deploy configuration
+        id: deploy_check
         shell: bash
         env:
           REGISTRY: ${{ env.REGISTRY }}
@@ -149,32 +150,36 @@ jobs:
           missing=0
           for secret_name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_PATH; do
             if [[ -z "${!secret_name}" ]]; then
-              echo "ERROR: Missing required secret: ${secret_name}"
+              echo "Missing required secret: ${secret_name}"
               missing=1
             fi
           done
 
           if [[ "${REGISTRY}" == "ghcr.io" ]]; then
             if [[ -z "${GHCR_TOKEN}" ]]; then
-              echo "ERROR: Missing required secret: GHCR_TOKEN"
+              echo "Missing required secret: GHCR_TOKEN"
               missing=1
             fi
           else
             if [[ -z "${REGISTRY_USERNAME}" ]]; then
-              echo "ERROR: Missing required secret: REGISTRY_USERNAME"
+              echo "Missing required secret: REGISTRY_USERNAME"
               missing=1
             fi
             if [[ -z "${REGISTRY_PASSWORD}" ]]; then
-              echo "ERROR: Missing required secret: REGISTRY_PASSWORD"
+              echo "Missing required secret: REGISTRY_PASSWORD"
               missing=1
             fi
           fi
 
           if [[ $missing -ne 0 ]]; then
-            exit 1
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Server deployment skipped because required secrets are not configured."
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Prepare SSH key
+        if: steps.deploy_check.outputs.enabled == 'true'
         shell: bash
         run: |
           mkdir -p ~/.ssh
@@ -182,6 +187,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
 
       - name: Deploy latest images with Docker Compose
+        if: steps.deploy_check.outputs.enabled == 'true'
         shell: bash
         env:
           REGISTRY: ${{ env.REGISTRY }}
