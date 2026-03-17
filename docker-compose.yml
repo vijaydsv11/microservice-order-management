@@ -172,6 +172,7 @@ services:
       args:
         SERVICE_NAME: eureka-server
     image: microservices/eureka-server:local
+    pull_policy: never
     container_name: eureka-server
     restart: unless-stopped
     environment:
@@ -191,6 +192,7 @@ services:
       args:
         SERVICE_NAME: config-server
     image: microservices/config-server:local
+    pull_policy: never
     container_name: config-server
     restart: unless-stopped
     environment:
@@ -212,6 +214,7 @@ services:
       args:
         SERVICE_NAME: auth-service
     image: microservices/auth-service:local
+    pull_policy: never
     container_name: auth-service
     restart: unless-stopped
     environment:
@@ -240,6 +243,7 @@ services:
       args:
         SERVICE_NAME: user-service
     image: microservices/user-service:local
+    pull_policy: never
     container_name: user-service
     restart: unless-stopped
     environment:
@@ -268,6 +272,7 @@ services:
       args:
         SERVICE_NAME: order-service
     image: microservices/order-service:local
+    pull_policy: never
     container_name: order-service
     restart: unless-stopped
     environment:
@@ -299,6 +304,7 @@ services:
       args:
         SERVICE_NAME: inventory-service
     image: microservices/inventory-service:local
+    pull_policy: never
     container_name: inventory-service
     restart: unless-stopped
     environment:
@@ -330,6 +336,7 @@ services:
       args:
         SERVICE_NAME: payment-service
     image: microservices/payment-service:local
+    pull_policy: never
     container_name: payment-service
     restart: unless-stopped
     environment:
@@ -362,6 +369,7 @@ services:
       args:
         SERVICE_NAME: api-gateway
     image: microservices/api-gateway:local
+    pull_policy: never
     container_name: api-gateway
     restart: unless-stopped
     environment:
