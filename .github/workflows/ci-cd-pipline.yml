@@ -40,8 +40,8 @@ jobs:
           - payment-service
 
     env:
-      REGISTRY: ${{ github.event.inputs.registry || 'ghcr.io' }}
-      OWNER: ${{ github.event.inputs.image_namespace || github.repository_owner }}
+      REGISTRY: ${{ github.event.inputs.registry || vars.CONTAINER_REGISTRY || 'ghcr.io' }}
+      OWNER: ${{ github.event.inputs.image_namespace || vars.IMAGE_NAMESPACE || github.repository_owner }}
       SERVICE: ${{ matrix.service }}
 
     steps:
@@ -130,23 +130,46 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    env:
+      REGISTRY: ${{ github.event.inputs.registry || vars.CONTAINER_REGISTRY || 'ghcr.io' }}
+      OWNER: ${{ github.event.inputs.image_namespace || vars.IMAGE_NAMESPACE || github.repository_owner }}
     steps:
       - name: Validate deploy secrets
         shell: bash
         env:
+          REGISTRY: ${{ env.REGISTRY }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
         run: |
           missing=0
-          for secret_name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_PATH GHCR_TOKEN; do
+          for secret_name in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_PATH; do
             if [[ -z "${!secret_name}" ]]; then
               echo "ERROR: Missing required secret: ${secret_name}"
               missing=1
             fi
           done
+
+          if [[ "${REGISTRY}" == "ghcr.io" ]]; then
+            if [[ -z "${GHCR_TOKEN}" ]]; then
+              echo "ERROR: Missing required secret: GHCR_TOKEN"
+              missing=1
+            fi
+          else
+            if [[ -z "${REGISTRY_USERNAME}" ]]; then
+              echo "ERROR: Missing required secret: REGISTRY_USERNAME"
+              missing=1
+            fi
+            if [[ -z "${REGISTRY_PASSWORD}" ]]; then
+              echo "ERROR: Missing required secret: REGISTRY_PASSWORD"
+              missing=1
+            fi
+          fi
+
           if [[ $missing -ne 0 ]]; then
             exit 1
           fi
@@ -161,13 +184,17 @@ jobs:
       - name: Deploy latest images with Docker Compose
         shell: bash
         env:
+          REGISTRY: ${{ env.REGISTRY }}
+          OWNER: ${{ env.OWNER }}
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
         run: |
-          OWNER_LC="$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')"
+          OWNER_LC="$(echo "${OWNER}" | tr '[:upper:]' '[:lower:]')"
 
           ssh -i ~/.ssh/deploy_key -p "${DEPLOY_PORT}" -o StrictHostKeyChecking=accept-new "${DEPLOY_USER}@${DEPLOY_HOST}" "bash -s" <<EOF
           set -e
@@ -178,11 +205,15 @@ jobs:
             git pull --ff-only
           fi
 
-          echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${OWNER_LC}" --password-stdin
+          if [ "${REGISTRY}" = "ghcr.io" ]; then
+            echo "${GHCR_TOKEN}" | docker login ghcr.io -u "${OWNER_LC}" --password-stdin
+          else
+            echo "${REGISTRY_PASSWORD}" | docker login "${REGISTRY}" -u "${REGISTRY_USERNAME}" --password-stdin
+          fi
 
           for service in eureka-server config-server api-gateway auth-service user-service order-service inventory-service payment-service; do
-            docker pull "ghcr.io/${OWNER_LC}/${service}:latest"
-            docker tag "ghcr.io/${OWNER_LC}/${service}:latest" "microservices/${service}:local"
+            docker pull "${REGISTRY}/${OWNER_LC}/${service}:latest"
+            docker tag "${REGISTRY}/${OWNER_LC}/${service}:latest" "microservices/${service}:local"
           done
 
           docker compose up -d --remove-orphans
