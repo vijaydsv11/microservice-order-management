@@ -65,13 +65,17 @@ jobs:
           fi
 
           echo "owner_lc=$(echo "${OWNER_TRIMMED}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
-          echo "service_lc=$(echo '${SERVICE}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+          echo "service_lc=$(echo "${SERVICE}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
       - name: Validate image coordinates
         shell: bash
         run: |
           if [[ -z "${{ steps.meta.outputs.owner_lc }}" ]]; then
             echo "ERROR: image namespace/owner resolved to empty value"
+            exit 1
+          fi
+          if [[ -z "${{ steps.meta.outputs.service_lc }}" ]]; then
+            echo "ERROR: service name resolved to empty value"
             exit 1
           fi
 
