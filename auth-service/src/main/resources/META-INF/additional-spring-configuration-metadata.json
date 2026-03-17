@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "app.jwt.secret",
+      "type": "java.lang.String",
+      "description": "Secret key used for JWT signing and validation in auth-service.",
+      "defaultValue": "your-secret-key-change-this-in-production"
+    },
+    {
+      "name": "app.jwt.expiration",
+      "type": "java.lang.Long",
+      "description": "JWT token expiration time in milliseconds.",
+      "defaultValue": 86400000
+    }
+  ]
+}

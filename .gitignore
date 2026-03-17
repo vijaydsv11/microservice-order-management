@@ -1,0 +1,88 @@
+# Ignore Maven
+target/
+*.jar
+*.war
+*.class
+*.exe
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.releaserc
+.versionrc
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.classpath
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Gradle
+.gradle/
+build/
+gradle-wrapper.jar
+.gradletasknamecache
+
+# Local environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Node (if using Node.js)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Docker volumes
+data/
+volume/
+
+# Java workspace outputs
+bin/
+out/
+
+# Maven wrapper local artifacts
+.mvn/wrapper/maven-wrapper.jar
+
+# Local Docker overrides and runtime files
+docker-compose.override.yml
+docker-compose.local.yml
+*.pid
+
+# Test and coverage reports
+coverage/
+jacoco.exec

@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: order-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  datasource:
+    url: jdbc:mysql://localhost:3306/order_db
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        "[hibernate.format_sql]": true
+    show-sql: false
+  cloud:
+    config:
+      fail-fast: false
+    function:
+      definition: inventoryFailedConsumer;paymentCompletedConsumer;paymentFailedConsumer
+    stream:
+      bindings:
+        order-created-out-0:
+          destination: order-created-topic
+          contentType: application/json
+        # Saga step 2 failure — inventory reservation failed
+        inventoryFailedConsumer-in-0:
+          destination: inventory-reservation-failed-topic
+          group: order-service-saga-group
+          content-type: application/json
+        # Saga step 4 success — payment completed → confirm order
+        paymentCompletedConsumer-in-0:
+          destination: payment-completed-topic
+          group: order-service-saga-group
+          content-type: application/json
+        # Saga step 4 failure — payment failed → cancel order
+        paymentFailedConsumer-in-0:
+          destination: payment-failed-topic
+          group: order-service-saga-group
+          content-type: application/json
+      kafka:
+        binder:
+          brokers: localhost:9092
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    prefer-ip-address: true
+
+server:
+  port: 8083
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      userService:
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 20s
+        permitted-number-of-calls-in-half-open-state: 3
+  retry:
+    instances:
+      userService:
+        max-attempts: 3
+        wait-duration: 500ms
+
+logging:
+  level:
+    root: INFO

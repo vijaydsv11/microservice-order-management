@@ -1,0 +1,5 @@
+{"properties": [{
+  "name": "spring.cloud.stream.kafka.binder.zkNodes",
+  "type": "java.lang.String",
+  "description": "A description for 'spring.cloud.stream.kafka.binder.zkNodes'"
+}]}

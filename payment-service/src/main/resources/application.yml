@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: payment-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  datasource:
+    url: jdbc:mysql://localhost:3311/payment_db
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        "[hibernate.format_sql]": true
+    show-sql: false
+  cloud:
+    config:
+      fail-fast: false
+    function:
+      definition: inventoryReservedConsumer
+    stream:
+      bindings:
+        # Saga step 3 input — receive inventory-reserved events
+        inventoryReservedConsumer-in-0:
+          destination: inventory-reserved-topic
+          group: payment-service-saga-group
+          content-type: application/json
+        # Saga step 3 outputs — publish payment outcome events
+        payment-completed-out-0:
+          destination: payment-completed-topic
+          content-type: application/json
+        payment-failed-out-0:
+          destination: payment-failed-topic
+          content-type: application/json
+      kafka:
+        binder:
+          brokers: ${KAFKA_BROKERS:localhost:9092}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
+
+server:
+  port: 8086
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    root: INFO
+    "[com.microservices]": DEBUG

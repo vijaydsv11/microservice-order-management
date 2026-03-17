@@ -1,0 +1,77 @@
+spring:
+  application:
+    name: inventory-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+  datasource:
+    url: jdbc:mysql://localhost:3310/inventory_db
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  cloud:
+    config:
+      fail-fast: false
+    function:
+      definition: orderCreatedConsumer;paymentFailedConsumer
+    stream:
+      # Default binder configuration for Kafka
+      default-binder: kafka
+      # Kafka binder configuration
+      kafka:
+        binder:
+          brokers: localhost:9092
+          auto-add-partitions: true
+          min-partition-count: 1
+      bindings:
+        # Saga step 2 input — receive order creation events
+        orderCreatedConsumer-in-0:
+          destination: order-created-topic
+          group: inventory-service-group
+          consumer:
+            concurrency: 2
+          content-type: application/json
+        # Saga step 2 outputs — publish reservation outcome events
+        inventory-reserved-out-0:
+          destination: inventory-reserved-topic
+          content-type: application/json
+        inventory-failed-out-0:
+          destination: inventory-reservation-failed-topic
+          content-type: application/json
+        # Saga compensation input — release inventory when payment fails
+        paymentFailedConsumer-in-0:
+          destination: payment-failed-topic
+          group: inventory-service-payment-group
+          content-type: application/json
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+server:
+  port: 8084
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://localhost:9411/api/v2/spans}
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    root: INFO
+    "[com.microservices]": DEBUG

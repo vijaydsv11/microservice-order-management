@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "app.jwt.secret",
+      "type": "java.lang.String",
+      "description": "Shared secret used by API Gateway JWT validation.",
+      "defaultValue": "your-secret-key-change-this-in-production"
+    }
+  ]
+}

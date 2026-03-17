@@ -1,0 +1,18 @@
+# syntax=docker/dockerfile:1
+
+ARG SERVICE_NAME
+
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+ARG SERVICE_NAME
+WORKDIR /workspace
+
+COPY . .
+RUN mvn -q -DskipTests -pl ${SERVICE_NAME} -am clean package
+
+FROM eclipse-temurin:17-jre-alpine
+ARG SERVICE_NAME
+WORKDIR /app
+
+COPY --from=build /workspace/${SERVICE_NAME}/target/${SERVICE_NAME}-1.0.0.jar /app/app.jar
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
