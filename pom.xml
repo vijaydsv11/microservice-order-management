@@ -72,7 +72,7 @@
                 <version>${jib-maven-plugin.version}</version>
                 <configuration>
                     <from>
-                        <image>eclipse-temurin:17-jre-alpine</image>
+                        <image>gcr.io/distroless/java17-debian12:nonroot</image>
                     </from>
                     <to>
                         <image>ghcr.io/microservices/${project.artifactId}:${project.version}</image>

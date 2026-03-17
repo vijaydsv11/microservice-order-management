@@ -59,7 +59,7 @@ jobs:
         id: meta
         shell: bash
         run: |
-          echo "owner_lc=$(echo '${OWNER}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+          echo "owner_lc=vijaydsv11" >> "$GITHUB_OUTPUT"
           echo "service_lc=$(echo '${SERVICE}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
 
       - name: Login to GHCR
